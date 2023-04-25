@@ -1,0 +1,92 @@
+# some imports needed
+from pyfirmata import SERVO
+from pyfirmata import Arduino, util
+from time import sleep
+import datetime
+import threading
+import time
+import pyfirmata
+
+board = pyfirmata.Arduino('COM3')
+iterator = util.Iterator(board)
+iterator.start()
+
+#pins
+switchPin = board.get_pin('d:6:i')
+red_led = board.get_pin('d:5:o')
+green_led = board.get_pin('d:3:o')
+yellow_led = board.get_pin('d:4:o')
+sensorPin = board.get_pin('d:7:i')
+buzzerPin = board.get_pin('d:2:o')
+board.digital[13].mode = SERVO
+
+
+
+#switch control
+def switchcontrl():
+    print("Waiting for switch to be pressed ")
+    while True:
+        switch=switchPin.read()
+        if switch != 0:
+            red_led.write(1)
+            print("Switch has been pressed down")
+        else:
+            red_led.write(0)
+
+def servocontrol():
+    sleep(5)
+    while True:
+        for i in range(0, 180):
+            board.digital[13].write(i)
+            sleep(0.005)
+            print(i)
+        for i in range(181, 0,-1):
+            board.digital[13].write(i)
+            sleep(0.015)
+            print(i)
+        break
+def sensorcontrol():
+    print("Waiting for sensor  to be blocked ")
+
+    while True:
+        rlt = sensorPin.read()
+        print(rlt)
+        if not rlt:
+            print("Sensor has detected something")
+            break
+
+    print("Waiting for switch to be pressed ")
+    while True:
+        if bool(switchPin.read()):
+            print("Switch has been pressed down")
+            break
+
+#control menu
+while True:
+    print("individual control menu ")
+    print("*" * 30)
+    print(" led     ---------- a")
+    print(" servo   ---------- b")
+    print(" sensor  ---------- c")
+    print(" buzzer  ---------- d")
+    print(" End     ---------- q")
+    choice=input("chose what to contol:\t")
+    if choice == "q":
+        break
+    elif choice == "a":
+        red_led.write(1)  # turn on
+        yellow_led.write(1)  # turn on
+        green_led.write(1)  # turn on
+        time.sleep(1)
+        red_led.write(0)  # turn off
+        yellow_led.write(0)  # turn off
+        green_led.write(0)  # turn off
+
+    elif choice == "b":
+        servocontrol()
+    elif choice == "c":
+        sensorcontrol()
+    elif choice =="d":
+        buzzerPin.write(1)
+        time.sleep(1)
+        buzzerPin.write(0)
